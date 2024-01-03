@@ -1,69 +1,144 @@
 <!DOCTYPE html>
 <!--
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <html>
   <head>
     <title>Army Constructor</title>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=500"/>
-    <style><!--
-      *,html,body,h1,h2,h3,h4,h5,h6,p,div,span,ul,ol,li,table,tr,td,th,input,select,textarea {
-        font-family: Calibri; "Open Sans", "Trebuchet MS", Tahoma, Lucida, Helvetica, Arial, sans;
-      }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <style>
+        @media (prefers-color-scheme: dark) {
+          body,html {
+            background-color: #202028;
+            color: #d0d0d8;
+          }
 
-      .cost, .quantity, .subtotal, #total {
-        text-align: right;
-      }
+          input,textarea,button,select {
+            background-color: #404050;
+            color: #d0d0d8;
+            border: 1px solid #808088;
+          }
 
-      td,th {
-        padding: 0.5em;
-      }
+          fieldset {
+            border: 1px solid #808088;
+          }
+        }
 
-      .cell-name {
-        width: 35%;
-      }
+        @media (prefers-color-scheme: light) {
+            body,html {
+              background-color: #d0d0d8;
+              color: #202028;
+            }
+            fieldset {
+              border: 1px solid #202028;
+            }
+        }
 
-      .cell-notes {
-        width: 100%;
-      }
+        *,html,body,h1,h2,h3,h4,h5,h6,p,div,span,ul,ol,li,table,tr,td,th,input,select,textarea,button {
+          font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
 
-      .cell-cost, .cell-quantity, .cell-subtotal {
-        width: 10%;
-      }
+        html,div,nav,header,footer,main,section,h1,form,table {
+          margin:0;
+          padding:0;
+        }
 
-      #army-name {
-        width: 50em;
-      }
+        h1 {
+          margin-bottom: 0.5em;
+        }
 
-      #export-box, #import-box {
-        width: 50%;
-        margin:auto;
-        display: none;
-        visibility: hidden;
-	text-align:center;
-      }
+        fieldset {
+          margin: 0 0 1em 0;
+          padding: 0.5em;
+        }
 
-      #export-box textarea, #import-box textarea {
-        display:block;
-        width: 40em;
-        margin:auto;
-        height: 10em;
-      }
-    --></style>
+        input,textarea,button,select,fieldset {
+          margin:0;
+          border-radius: 0.25em; 
+        }
 
-    <script><!--
+        legend {
+          padding: 0 0.25em 0 0.25em;
+          font-weight:bold;
+        }
+
+        label {
+          white-space: nowrap;
+          font-weight:bold;
+        }
+
+        body {
+          padding: 0.5em;
+        }
+
+        h1,h2 {
+          font-size: inherit;
+        }
+
+        .cost, .quantity, .subtotal, #total {
+          text-align: right;
+        }
+
+        table {
+          width: 100%;
+        }
+
+        td,th {
+          margin:0;
+          padding:0;
+          white-space: nowrap;
+        }
+
+        .cell-name, .cell-notes {
+        }
+
+        .cell-cost, .cell-quantity, .cell-subtotal {
+          padding-left: 1em;
+        }
+
+        .cell-buttons {
+          width: 1em;
+        }
+
+        #army-name {
+          margin: 0em 0em 0.5em 0em;
+          width: 100%;
+        }
+
+        #export-box, #import-box {
+          width: 50%;
+          margin:auto;
+          display: none;
+          visibility: hidden;
+          text-align:center;
+        }
+
+        #export-box textarea, #import-box textarea {
+          display: block;
+          width: 40em;
+          margin:auto;
+          height: 10em;
+        }
+
+        footer {
+          font-size: smaller;
+          font-style: italic;
+        }
+    </style>
+
+    <script>
       // retrieve or initialise the list of armies
       if (!(armies = retrieve('armies'))) armies = {};
 
@@ -74,11 +149,11 @@
 
       // types for each property:
       var types = {
-        "name":     "text",
-        "cost":     "number",
+        "name": "text",
+        "cost": "number",
         "quantity": "number",
         "subtotal": "text",
-        "notes":    "text"
+        "notes": "text"
       };
 
       // default values for each property:
@@ -89,9 +164,9 @@
       };
 
       var placeHolders = {
-      	'name': 'Unit Name',
-      	'cost': 'Cost',
-      	'quantity': 'Quantity'
+        'name': 'Unit Name',
+        'cost': 'Cost',
+        'quantity': 'Quantity'
       };
 
       // whether the currently active army has been edited
@@ -107,10 +182,10 @@
       }
 
       function uniqid() {
-        return  Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
-          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
-          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
-          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+          + '-' + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+          + '-' + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+          + '-' + Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
       }
 
       function store(name, data) {
@@ -136,10 +211,10 @@
       function calculate() {
         total = 0;
         rows = d.getElementsByClassName('table-row');
-        for (i = 0 ; i < rows.length ; i++) {
+        for (i = 0; i < rows.length; i++) {
           id = rows[i].id.replace('table-row-', '');
-          cost = get('cost-'+id).value * get('quantity-'+id).value;
-          get('subtotal-'+id).value = cost;
+          cost = get('cost-' + id).value * get('quantity-' + id).value;
+          get('subtotal-' + id).value = cost;
           total += cost;
         }
         get('total').innerHTML = total;
@@ -147,36 +222,44 @@
 
       function addRow(values) {
         row = create('tr');
-        row.className = 'table-row';
+        row.classList.add('table-row');
 
         id = (values && values["id"] ? values["id"] : uniqid());
-        row.id = row.className+'-'+id;
+        row.id = row.classList.item(0) + '-' + id;
 
-        for (i = 0 ; i < cells.length ; i++) {
+        for (i = 0; i < cells.length; i++) {
           input = create('input');
-          input.id = cells[i]+'-'+id;
-          input.className = cells[i];
+          input.id = cells[i] + '-' + id;
+          input.classList.add(cells[i]);
           input.type = types[cells[i]];
-          input.style.width = '100%';
+
           if (cells[i] == 'subtotal') input.disabled = true;
-          if (types[cells[i]] == 'number') input.min = 1;
+
+          if (types[cells[i]] == 'number') {
+            input.min = 1;
+            input.step = 1;
+          }
 
           if (values && values[cells[i]]) {
-          	input.value = values[cells[i]];
+            input.value = values[cells[i]];
+
           } else if (defaultValues[cells[i]]) {
-          	input.value = defaultValues[cells[i]];
+            input.value = defaultValues[cells[i]];
 
           }
 
-          if (placeHolders[cells[i]]) input.setAttribute('placeholder', cells[i]);
+          if (placeHolders[cells[i]]) input.setAttribute('placeholder', placeHolders[cells[i]]);
 
           cell = create('td');
-          cell.className = 'cell-'+cells[i];
+          cell.classList.add('cell-' + cells[i]);
           cell.appendChild(input);
+
           row.appendChild(cell);
         }
 
         cell = create('td');
+        cell.classList.add('cell-buttons');
+
         row.appendChild(cell);
 
         if (!values) {
@@ -184,6 +267,7 @@
           ab.type = 'button';
           ab.value = '+';
           cell.appendChild(ab);
+
           ab.onclick = function() {
             addRow();
             e = window.event.srcElement;
@@ -192,6 +276,7 @@
             db.type = 'button';
             db.value = '-';
             e.parentNode.appendChild(db);
+
             db.onclick = function() {
               e = window.event.srcElement;
               e.parentNode.parentNode.parentNode.removeChild(e.parentNode.parentNode);
@@ -207,6 +292,7 @@
           db.type = 'button';
           db.value = '-';
           cell.appendChild(db);
+
           db.onclick = function() {
             e = window.event.srcElement;
             e.parentNode.parentNode.parentNode.removeChild(e.parentNode.parentNode);
@@ -221,20 +307,22 @@
       function saveArmy() {
         army = {
           "id": get('army-id').value,
-          "name": get('army-name').value,
+          "name": get('army-name').value.length < 1 ? "Unnamed Army @ "+new Date().toLocaleString() : get('army-name').value,
           "units": []
         };
 
         rows = d.getElementsByClassName('table-row');
-        for (i = 0 ; i < rows.length ; i++) {
+        for (i = 0; i < rows.length; i++) {
           id = rows[i].id.replace('table-row-', '');
+
           unit = {
-            "id":       id,
-            "name":     get('name-'+id).value,
-            "cost":     get('cost-'+id).value,
-            "quantity": get('quantity-'+id).value,
-            "notes":    get('notes-'+id).value
+            "id": id,
+            "name": get('name-' + id).value,
+            "cost": get('cost-' + id).value,
+            "quantity": get('quantity-' + id).value,
+            "notes": get('notes-' + id).value
           };
+
           army.units[i] = unit;
         }
 
@@ -244,6 +332,7 @@
 
         get('save-button').disabled = true;
         get('delete-button').disabled = false;
+
         hasChanged = false;
       }
 
@@ -285,12 +374,12 @@
 
         army = armies[id];
 
-	emptyTable();
+        emptyTable();
 
         get('army-id').value = army.id
         get('army-name').value = army.name;
 
-        for (j = 0 ; j < army.units.length ; j++) addRow(army.units[j]);
+        for (j = 0; j < army.units.length; j++) addRow(army.units[j]);
 
         addRow();
 
@@ -298,6 +387,7 @@
 
         hasChanged = false;
         get('save-button').disabled = true;
+
         calculate();
       }
 
@@ -324,6 +414,7 @@
 
         get('save-button').disabled = true;
         get('delete-button').disabled = true;
+
         hasChanged = false;
       }
 
@@ -354,10 +445,10 @@
       }
 
       function importArmyList() {
-      	data = JSON.parse(decodeURIComponent(escape(window.atob(get('import-textarea').value))));
-	replace = get('import-overwrite').checked;
+        data = JSON.parse(decodeURIComponent(escape(window.atob(get('import-textarea').value))));
+        replace = get('import-overwrite').checked;
 
-	replaced = imported = ignored = 0;
+        replaced = imported = ignored = 0;
         for (key in data) {
           if (armies[key]) {
             if (replace) {
@@ -376,13 +467,12 @@
           }
         }
 
-        alert("Imported "+imported+", replaced "+replaced+", ignored "+ignored);
+        alert("Imported " + imported + ", replaced " + replaced + ", ignored " + ignored);
 
         store('armies', armies);
         buildArmyList();
       }
-
-    --></script>
+    </script>
   </head>
   <body>
 
@@ -395,7 +485,7 @@
         <div>
           <select id="army-list">
           </select>
-          <input type="button" value="Load Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) loadArmy()" />
+          <input type="button" value="Load Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) loadArmy()">
         </div>
       </fieldset>
     </form>
@@ -405,13 +495,10 @@
         <legend>Edit Army</legend>
 
         <!-- unique ID of the current army -->
-        <input type="hidden" id="army-id" />
+        <input type="hidden" id="army-id">
 
         <!-- army name -->
-        <div style="white-space:nowrap">
-          <label id="army-name-label" for="army-name">Army Name:</label>
-          <input id="army-name" name="army-name" />
-        </div>
+        <input id="army-name" name="army-name" placeholder="Army Name">
 
         <!-- units in the army -->
         <table>
@@ -421,7 +508,7 @@
               <th style="text-align:right">Cost</th>
               <th style="text-align:right">Quantity</th>
               <th style="text-align:right">Sub Total</th>
-              <th style="text-align:left">Notes</th>
+              <th style="text-align:left" colspan="2">Notes</th>
             </tr>
           </thead>
           <tbody id="table-body">
@@ -430,16 +517,16 @@
             <tr>
               <th colspan="3" style="text-align:right">Total:</th>
               <th id="total"></th>
-              <th></th>
+              <th colspan="2">&nbsp;</th>
             </tr>
           </tfoot>
         </table>
 
         <!-- action buttons -->
         <div style="text-align:center;padding:1em">
-          <input id="save-button" type="button" value="Save" onclick="saveArmy()" disabled="disabled" />
-          <input id="delete-button" type="button" value="Delete" onclick="deleteArmy()" disabled="disabled" />
-          <input type="button" value="Create New Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) newArmy()" />
+          <input id="save-button" type="button" value="Save" onclick="saveArmy()" disabled="disabled">
+          <input id="delete-button" type="button" value="Delete" onclick="deleteArmy()" disabled="disabled">
+          <input type="button" value="Create New Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) newArmy()">
           </div>
 
       </fieldset>
@@ -448,8 +535,8 @@
     <!-- import/export -->
     <form onsubmit="return false">
       <div style="text-align:center;padding:1em">
-        <input type="button" value="Export Armies" onclick="exportArmyList()" />
-        <input type="button" value="Import Armies" onclick="displayImportForm()" />
+        <input type="button" value="Export Armies" onclick="exportArmyList()">
+        <input type="button" value="Import Armies" onclick="displayImportForm()">
       </div>
     </form>
 
@@ -458,7 +545,7 @@
       <h3>Export Armies</h3>
       <textarea id="export-textarea"></textarea>
       <p style="font-size:smaller;font-style:italic">Copy the contents of this box to your clipboard. You can then import this data into another instance of the Army Constructor, or save it to a plain text file as a backup.</p>
-      <input type="button" value="Cancel" onclick="hideExportForm()"/>
+      <input type="button" value="Cancel" onclick="hideExportForm()">
     </div>
 
     <!-- import -->
@@ -466,30 +553,32 @@
       <h3>Import Armies</h3>
       <textarea id="import-textarea"></textarea>
       <p style="font-size:smaller;font-style:italic"></p>
-      <div><input type="checkbox" id="import-overwrite" name="import-overwrite" />&nbsp;<label for="import-overwite">Replace existing entries</label></div>
-      <input type="button" value="Import" onclick="importArmyList()" />
+      <div><input type="checkbox" id="import-overwrite" name="import-overwrite">&nbsp;<label for="import-overwite">Replace existing entries</label></div>
+      <input type="button" value="Import" onclick="importArmyList()">
       <input type="button" value="Cancel" onclick="hideImportForm()">
     </div>
 
     <!-- info -->
-    <h2>How This Works</h2>
-    <p>This application is 100% in-browser - there is no storage of data
-    on the server. This means that you can use it offline, on almost
-    every browser (including mobile devices).</p>
-    <p>When you click the "Save" button, the army list is saved in your
-    browser's local database. This means that you can save this web
-    page to your local hard disk, open it in your browser, and access
-    all your armies even when offline.</p>
-    <p><strong>Important Note:</strong> the storage system this page
-    uses restricts access to data based on domain name. This means that
-    if you create an army list from a web page on a remote server and
-    then take a copy of the page to use offline, your army list won't be
-    available. The Import and Export functions above can be used to copy
-    your army lists between copies on different servers or on your local
-    hard drive.</p>
-
-    <!-- footer -->
     <footer>
+        <h2>How This Works</h2>
+
+        <p>This application is 100% in-browser - there is no storage of
+        data on the server. This means that you can use it offline, on
+        almost every browser (including mobile devices).</p>
+
+        <p>When you click the "Save" button, the army list is saved in
+        your browser's local database. This means that you can save this
+        web page to your local hard disk, open it in your browser, and
+        access all your armies even when offline.</p>
+
+        <p><strong>Important Note:</strong> the storage system this page
+        uses restricts access to data based on domain name. This means
+        that if you create an army list from a web page on a remote
+        server and then take a copy of the page to use offline, your
+        army list won't be available. The Import and Export functions
+        above can be used to copy your army lists between copies on
+        different servers or on your local hard drive.</p>
+
       <div style="font-style:italic">Copyright 2013 Jodrell.org</div>
     </footer>
 
