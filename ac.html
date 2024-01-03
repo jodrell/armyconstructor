@@ -16,9 +16,11 @@
 <html>
   <head>
     <title>Army Constructor</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=500"/>
     <style><!--
       *,html,body,h1,h2,h3,h4,h5,h6,p,div,span,ul,ol,li,table,tr,td,th,input,select,textarea {
-        font-family: Calibri;
+        font-family: Calibri; "Open Sans", "Trebuchet MS", Tahoma, Lucida, Helvetica, Arial, sans;
       }
 
       .cost, .quantity, .subtotal, #total {
@@ -50,6 +52,7 @@
         margin:auto;
         display: none;
         visibility: hidden;
+	text-align:center;
       }
 
       #export-box textarea, #import-box textarea {
@@ -80,8 +83,9 @@
 
       // default values for each property:
       var defaultValues = {
-      	'cost': 0,
-      	'quantity':0
+        'cost': 0,
+        'quantity': 1,
+        'subtotal': 0,
       };
 
       var placeHolders = {
@@ -155,7 +159,7 @@
           input.type = types[cells[i]];
           input.style.width = '100%';
           if (cells[i] == 'subtotal') input.disabled = true;
-          if (types[cells[i]] == 'number') input.min = 0;
+          if (types[cells[i]] == 'number') input.min = 1;
 
           if (values && values[cells[i]]) {
           	input.value = values[cells[i]];
@@ -164,7 +168,7 @@
 
           }
 
-          if (placeHolders(cells[i])) input.setAttribute('placeholder', cells[i]);
+          if (placeHolders[cells[i]]) input.setAttribute('placeholder', cells[i]);
 
           cell = create('td');
           cell.className = 'cell-'+cells[i];
@@ -337,6 +341,18 @@
         div.style.visibility = 'visible';
       }
 
+      function hideImportForm() {
+        div = get('import-box');
+        div.style.display = 'none';
+        div.style.visibility = 'hidden';
+      }
+
+      function hideExportForm() {
+        div = get('export-box');
+        div.style.display = 'none';
+        div.style.visibility = 'hidden';
+      }
+
       function importArmyList() {
       	data = JSON.parse(decodeURIComponent(escape(window.atob(get('import-textarea').value))));
 	replace = get('import-overwrite').checked;
@@ -393,7 +409,7 @@
 
         <!-- army name -->
         <div style="white-space:nowrap">
-          <label for="army-name">Army Name:</label>
+          <label id="army-name-label" for="army-name">Army Name:</label>
           <input id="army-name" name="army-name" />
         </div>
 
@@ -442,6 +458,7 @@
       <h3>Export Armies</h3>
       <textarea id="export-textarea"></textarea>
       <p style="font-size:smaller;font-style:italic">Copy the contents of this box to your clipboard. You can then import this data into another instance of the Army Constructor, or save it to a plain text file as a backup.</p>
+      <input type="button" value="Cancel" onclick="hideExportForm()"/>
     </div>
 
     <!-- import -->
@@ -451,6 +468,7 @@
       <p style="font-size:smaller;font-style:italic"></p>
       <div><input type="checkbox" id="import-overwrite" name="import-overwrite" />&nbsp;<label for="import-overwite">Replace existing entries</label></div>
       <input type="button" value="Import" onclick="importArmyList()" />
+      <input type="button" value="Cancel" onclick="hideImportForm()">
     </div>
 
     <!-- info -->
