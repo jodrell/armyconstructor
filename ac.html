@@ -78,6 +78,18 @@
         "notes":    "text"
       };
 
+      // default values for each property:
+      var defaultValues = {
+      	'cost': 0,
+      	'quantity':0
+      };
+
+      var placeHolders = {
+      	'name': 'Unit Name',
+      	'cost': 'Cost',
+      	'quantity': 'Quantity'
+      };
+
       // whether the currently active army has been edited
       var hasChanged = false;
 
@@ -145,7 +157,14 @@
           if (cells[i] == 'subtotal') input.disabled = true;
           if (types[cells[i]] == 'number') input.min = 0;
 
-          if (values && values[cells[i]]) input.value = values[cells[i]];
+          if (values && values[cells[i]]) {
+          	input.value = values[cells[i]];
+          } else if (defaultValues[cells[i]]) {
+          	input.value = defaultValues[cells[i]];
+
+          }
+
+          if (placeHolders(cells[i])) input.setAttribute('placeholder', cells[i]);
 
           cell = create('td');
           cell.className = 'cell-'+cells[i];
