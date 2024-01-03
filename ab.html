@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style><!--
+      *,html,body,h1,h2,h3,h4,h5,h6,p,div,span,ul,ol,li,table,tr,td,th,input,select,textarea {
+        font-family: Calibri;
+      }
+
+      body {
+      	padding: 0 5em;
+      }
+
+      .cost, .quantity, .subtotal, #total {
+        text-align: right;
+      }
+
+      td,th {
+        padding: 0.5em;
+      }
+
+      .cell-name {
+        width: 35%;
+      }
+
+      .cell-notes {
+        width: 100%;
+      }
+
+      .cell-cost, .cell-quantity, .cell-subtotal {
+        width: 10%;
+      }
+
+      #army-name {
+        width: 50em;
+      }
+
+      #export-box, #import-box {
+        width: 50%;
+        margin:auto;
+        display: none;
+        visibility: hidden;
+      }
+
+      #export-box textarea, #import-box textarea {
+        display:block;
+        width: 40em;
+        margin:auto;
+        height: 10em;
+      }
+    --></style>
+
+    <script><!--
+      // retrieve or initialise the list of armies
+      if (!(armies = retrieve('armies'))) armies = {};
+
+      var d = document;
+
+      // the names of the properties of each unit
+      var cells = ['name', 'cost', 'quantity', 'subtotal', 'notes'];
+
+      // types for each property:
+      var types = {
+        "name":     "text",
+        "cost":     "number",
+        "quantity": "number",
+        "subtotal": "text",
+        "notes":    "text"
+      };
+
+      // whether the currently active army has been edited
+      var changed = false;
+
+      function get(id) {
+        return d.getElementById(id);
+      }
+
+      function create(name) {
+        el = d.createElement(name);
+        return el;
+      }
+
+      function uniqid() {
+        return  Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
+          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
+          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) + '-' +
+          Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+      }
+
+      function store(name, data) {
+        localStorage.setItem(name, JSON.stringify(data));
+      }
+
+      function retrieve(name) {
+        try {
+          return JSON.parse(localStorage.getItem(name));
+
+        } catch (err) {
+          return null;
+
+        }
+      }
+
+      function armyChanged() {
+        changed = true;
+        get('save-button').disabled = false;
+        calculate();
+      }
+
+      function calculate() {
+        total = 0;
+        rows = d.getElementsByClassName('table-row');
+        for (i = 0 ; i < rows.length ; i++) {
+          id = rows[i].id.replace('table-row-', '');
+          cost = get('cost-'+id).value * get('quantity-'+id).value;
+          get('subtotal-'+id).value = cost;
+          total += cost;
+        }
+        get('total').innerHTML = total;
+      }
+
+      function addRow(values) {
+        row = create('tr');
+        row.className = 'table-row';
+
+        id = (values && values["id"] ? values["id"] : uniqid());
+        row.id = row.className+'-'+id;
+
+        for (i = 0 ; i < cells.length ; i++) {
+          input = create('input');
+          input.id = cells[i]+'-'+id;
+          input.className = cells[i];
+          input.type = types[cells[i]];
+          input.style.width = '100%';
+          if (cells[i] == 'subtotal') input.disabled = true;
+          if (types[cells[i]] == 'number') input.min = 0;
+
+          if (values && values[cells[i]]) input.value = values[cells[i]];
+
+          cell = create('td');
+          cell.className = 'cell-'+cells[i];
+          cell.appendChild(input);
+          row.appendChild(cell);
+        }
+
+        cell = create('td');
+        row.appendChild(cell);
+
+        if (!values) {
+          ab = create('input');
+          ab.type = 'button';
+          ab.value = '+';
+          cell.appendChild(ab);
+          ab.onclick = function() {
+            addRow();
+            e = window.event.srcElement;
+
+            db = create('input');
+            db.type = 'button';
+            db.value = '-';
+            e.parentNode.appendChild(db);
+            db.onclick = function() {
+              e = window.event.srcElement;
+              e.parentNode.parentNode.parentNode.removeChild(e.parentNode.parentNode);
+              armyChanged();
+            };
+
+            e.parentNode.removeChild(e);
+            armyChanged();
+          };
+
+        } else {
+          db = create('input');
+          db.type = 'button';
+          db.value = '-';
+          cell.appendChild(db);
+          db.onclick = function() {
+            e = window.event.srcElement;
+            e.parentNode.parentNode.parentNode.removeChild(e.parentNode.parentNode);
+            armyChanged();
+          };
+        }
+
+        tbody = get('table-body');
+        tbody.appendChild(row);
+      }
+
+      function saveArmy() {
+        army = {
+          "id": get('army-id').value,
+          "name": get('army-name').value,
+          "units": []
+        };
+
+        rows = d.getElementsByClassName('table-row');
+        for (i = 0 ; i < rows.length ; i++) {
+          id = rows[i].id.replace('table-row-', '');
+          unit = {
+            "id":       id,
+            "name":     get('name-'+id).value,
+            "cost":     get('cost-'+id).value,
+            "quantity": get('quantity-'+id).value,
+            "notes":    get('notes-'+id).value
+          };
+          army.units[i] = unit;
+        }
+
+        armies[army.id] = army;
+        store('armies', armies);
+        buildArmyList();
+
+        get('save-button').disabled = true;
+        get('delete-button').disabled = false;
+        changed = false;
+      }
+
+      function buildArmyList() {
+        select = get('army-list');
+        form = get('army-list-form');
+
+        while (select.childNodes.length > 0) select.removeChild(select.firstChild);
+
+        opt = create('option');
+        opt.innerHTML = 'Select:';
+        select.appendChild(opt);
+
+        count = 0;
+        for (key in armies) {
+          count++;
+          opt = create('option');
+          opt.value = key;
+          opt.innerHTML = armies[key]["name"];
+          select.appendChild(opt);
+        }
+
+        if (0 == count) {
+          form.style.display = 'none';
+          form.style.visibility = 'hidden';
+
+        } else {
+          form.style.display = 'block';
+          form.style.visibility = 'visible';
+
+        }
+      }
+
+      function loadArmy() {
+        select = get('army-list');
+        id = select.options[select.selectedIndex].value;
+
+        if (!armies[id]) return false;
+
+        army = armies[id];
+
+	emptyTable();
+
+        get('army-id').value = army.id
+        get('army-name').value = army.name;
+
+        for (j = 0 ; j < army.units.length ; j++) addRow(army.units[j]);
+
+        addRow();
+
+        get('delete-button').disabled = false;
+
+        changed = false;
+        calculate();
+      }
+
+      function emptyTable() {
+        tbody = get('table-body');
+        while (tbody.childNodes.length > 0) tbody.removeChild(tbody.firstChild)
+      }
+
+      function deleteArmy() {
+        delete armies[get('army-id').value];
+        store('armies', armies);
+        buildArmyList();
+        newArmy();
+      }
+
+      // re-initialise everything:
+      function newArmy() {
+        get('army-id').value = uniqid();
+        get('army-name').value = '';
+
+        emptyTable();
+
+        addRow();
+
+        get('save-button').disabled = true;
+        get('delete-button').disabled = true;
+        changed = false;
+      }
+
+      function exportArmyList() {
+        div = get('export-box');
+        div.style.display = 'block';
+        div.style.visibility = 'visible';
+        textarea = get('export-textarea');
+        textarea.innerHTML = window.btoa(unescape(encodeURIComponent(JSON.stringify(armies))));
+      }
+
+      function displayImportForm() {
+        div = get('import-box');
+        div.style.display = 'block';
+        div.style.visibility = 'visible';
+      }
+
+      function importArmyList() {
+      	data = JSON.parse(decodeURIComponent(escape(window.atob(get('import-textarea').value))));
+	replace = get('import-overwrite').checked;
+
+	replaced = imported = ignored = 0;
+        for (key in data) {
+          if (armies[key]) {
+            if (replace) {
+              replaced++;
+              armies[key] = data[key];
+
+            } else {
+              ignored++;
+
+            }
+
+          } else {
+            armies[key] = data[key];
+            imported++;
+
+          }
+        }
+
+        alert("Imported "+imported+", replaced "+replaced+", ignored "+ignored);
+
+        store('armies', armies);
+        buildArmyList();
+      }
+
+    --></script>
+  </head>
+  <body>
+
+    <h1>Army Builder</h1>
+
+    <!-- list of saved armies to load -->
+    <form id="army-list-form" onsubmit="return false">
+      <fieldset>
+        <legend>Load Army</legend>
+        <div>
+          <select id="army-list">
+          </select>
+          <input type="button" value="Load Army" onclick="loadArmy()" />
+        </div>
+      </fieldset>
+    </form>
+
+    <form onchange="armyChanged()" onsubmit="return false">
+      <fieldset>
+        <legend>Edit Army</legend>
+
+        <!-- unique ID of the current army -->
+        <input type="hidden" id="army-id" />
+
+        <!-- army name -->
+        <div style="white-space:nowrap">
+          <label for="army-name">Army Name:</label>
+          <input id="army-name" name="army-name" />
+        </div>
+
+        <!-- units in the army -->
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left">Name/Description</th>
+              <th style="text-align:right">Cost</th>
+              <th style="text-align:right">Quantity</th>
+              <th style="text-align:right">Sub Total</th>
+              <th style="text-align:left">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" style="text-align:right">Total:</th>
+              <th id="total"></th>
+              <th></th>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- action buttons -->
+        <div style="text-align:center">
+          <input id="save-button" type="button" value="Save" onclick="saveArmy()" disabled="disabled" />
+          <input id="delete-button" type="button" value="Delete" onclick="deleteArmy()" disabled="disabled" />
+          <input type="button" value="Create New Army" onclick="newArmy()" />
+          </div>
+
+      </fieldset>
+    </form>
+
+    <!-- import/export -->
+    <form onsubmit="return false">
+      <div style="text-align:center">
+        <input type="button" value="Export Armies" onclick="exportArmyList()" />
+        <input type="button" value="Import Armies" onclick="displayImportForm()" />
+      </div>
+    </form>
+
+    <!-- export -->
+    <div id="export-box">
+      <h3>Export Armies</h3>
+      <textarea id="export-textarea"></textarea>
+      <p style="font-size:smaller;font-style:italic">Copy the contents of this box to your clipboard. You can then import this data into another instance of the Army Builder, or save it to a plain text file as a backup.</p>
+    </div>
+
+    <!-- import -->
+    <div id="import-box">
+      <h3>Import Armies</h3>
+      <textarea id="import-textarea"></textarea>
+      <p style="font-size:smaller;font-style:italic"></p>
+      <div><input type="checkbox" id="import-overwrite" name="import-overwrite" />&nbsp;<label for="import-overwite">Replace existing entries</label></div>
+      <input type="button" value="Import" onclick="importArmyList()" />
+    </div>
+
+    <!-- info -->
+    <h2>How This Works</h2>
+    <p>This application is 100% in-browser - there is no storage of data on the server. This means that you can use it offline, on almost every browser (including mobile devices).</p>
+
+    <!-- footer -->
+    <footer>
+      <div style="font-style:italic">Copyright 2013 Jodrell.org</div>
+    </footer>
+
+    <!-- initialise everything -->
+    <script>
+      get('army-id').value = uniqid();
+      buildArmyList();
+      addRow();
+    </script>
+
+  </body>
+</html>
