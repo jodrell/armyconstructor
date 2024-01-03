@@ -21,10 +21,6 @@
         font-family: Calibri;
       }
 
-      body {
-      	padding: 0 5em;
-      }
-
       .cost, .quantity, .subtotal, #total {
         text-align: right;
       }
@@ -83,7 +79,7 @@
       };
 
       // whether the currently active army has been edited
-      var changed = false;
+      var hasChanged = false;
 
       function get(id) {
         return d.getElementById(id);
@@ -116,7 +112,7 @@
       }
 
       function armyChanged() {
-        changed = true;
+        hasChanged = true;
         get('save-button').disabled = false;
         calculate();
       }
@@ -225,7 +221,7 @@
 
         get('save-button').disabled = true;
         get('delete-button').disabled = false;
-        changed = false;
+        hasChanged = false;
       }
 
       function buildArmyList() {
@@ -277,7 +273,8 @@
 
         get('delete-button').disabled = false;
 
-        changed = false;
+        hasChanged = false;
+        get('save-button').disabled = true;
         calculate();
       }
 
@@ -304,7 +301,7 @@
 
         get('save-button').disabled = true;
         get('delete-button').disabled = true;
-        changed = false;
+        hasChanged = false;
       }
 
       function exportArmyList() {
@@ -363,7 +360,7 @@
         <div>
           <select id="army-list">
           </select>
-          <input type="button" value="Load Army" onclick="loadArmy()" />
+          <input type="button" value="Load Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) loadArmy()" />
         </div>
       </fieldset>
     </form>
@@ -404,10 +401,10 @@
         </table>
 
         <!-- action buttons -->
-        <div style="text-align:center">
+        <div style="text-align:center;padding:1em">
           <input id="save-button" type="button" value="Save" onclick="saveArmy()" disabled="disabled" />
           <input id="delete-button" type="button" value="Delete" onclick="deleteArmy()" disabled="disabled" />
-          <input type="button" value="Create New Army" onclick="newArmy()" />
+          <input type="button" value="Create New Army" onclick="if (!hasChanged || window.confirm('Discard changes?')) newArmy()" />
           </div>
 
       </fieldset>
@@ -415,7 +412,7 @@
 
     <!-- import/export -->
     <form onsubmit="return false">
-      <div style="text-align:center">
+      <div style="text-align:center;padding:1em">
         <input type="button" value="Export Armies" onclick="exportArmyList()" />
         <input type="button" value="Import Armies" onclick="displayImportForm()" />
       </div>
@@ -439,7 +436,20 @@
 
     <!-- info -->
     <h2>How This Works</h2>
-    <p>This application is 100% in-browser - there is no storage of data on the server. This means that you can use it offline, on almost every browser (including mobile devices).</p>
+    <p>This application is 100% in-browser - there is no storage of data
+    on the server. This means that you can use it offline, on almost
+    every browser (including mobile devices).</p>
+    <p>When you click the "Save" button, the army list is saved in your
+    browser's local database. This means that you can save this web
+    page to your local hard disk, open it in your browser, and access
+    all your armies even when offline.</p>
+    <p><strong>Important Note:</strong> the storage system this page
+    uses restricts access to data based on domain name. This means that
+    if you create an army list from a web page on a remote server and
+    then take a copy of the page to use offline, your army list won't be
+    available. The Import and Export functions above can be used to copy
+    your army lists between copies on different servers or on your local
+    hard drive.</p>
 
     <!-- footer -->
     <footer>
